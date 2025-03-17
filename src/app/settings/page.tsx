@@ -11,12 +11,11 @@ import {
 	ModalHeader,
 	useDisclosure,
 } from "@nextui-org/react";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-import { storage } from "~/lib/firebase";
+import { uploadProfileImage } from "~/lib/storage";
 import EmilLoader from "../Extra/components/EmilLoader";
 import { RequestBody } from "../api/user/update/route";
 
@@ -60,9 +59,7 @@ const Settings = () => {
 
 			setImageLoading(true);
 
-			const storageRef = ref(storage, `profile/${session?.user.id}`);
-			await uploadBytes(storageRef, await fileHandle.getFile());
-			const url = await getDownloadURL(storageRef);
+			const url = await uploadProfileImage(await fileHandle.getFile(), session?.user.id ?? "");
 
 			const body: RequestBody = {
 				imageUrl: url,
@@ -188,7 +185,7 @@ const Settings = () => {
 					}
 				/>
 				<Button
-					onClick={() => changePassword(pass1, pass2)}
+					onPress={() => changePassword(pass1, pass2)}
 					isLoading={passLoading}
 					color="success"
 					variant="faded"

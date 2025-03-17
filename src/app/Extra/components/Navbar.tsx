@@ -67,7 +67,7 @@ const Navbar = () => {
 						<Link
 							className="cursor-pointer"
 							color="foreground"
-							onClick={() => {
+							onPress={() => {
 								setAuthModalType("login");
 								AuthModalState.onOpen();
 							}}>
@@ -106,7 +106,7 @@ const Navbar = () => {
 								<DropdownItem key="settings" href="/settings">
 									My Settings
 								</DropdownItem>
-								<DropdownItem key="logout" color="danger" className="text-danger" onClick={async () => await signOut()}>
+								<DropdownItem key="logout" color="danger" className="text-danger" onPress={async () => await signOut()}>
 									Log Out
 								</DropdownItem>
 							</DropdownMenu>
@@ -118,7 +118,7 @@ const Navbar = () => {
 					<NavbarItem>
 						<Button
 							color="primary"
-							onClick={() => {
+							onPress={() => {
 								setAuthModalType("register");
 								AuthModalState.onOpen();
 							}}
@@ -130,7 +130,7 @@ const Navbar = () => {
 					<NavbarItem>
 						<Button
 							color="primary"
-							onClick={() => {
+							onPress={() => {
 								setAuthModalType("login");
 								AuthModalState.onOpen();
 							}}

@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Link } from "@nextui-org/react";
-import { FiMail, FiEye, FiEyeOff } from "react-icons/fi";
+import { Button, Input, Link, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@nextui-org/react";
 import { signIn } from "next-auth/react";
+import { useState } from "react";
+import { FiEye, FiEyeOff, FiMail } from "react-icons/fi";
 
 interface LoginModalProps {
 	onOpenChange: () => void;
@@ -66,13 +66,13 @@ export default function LoginModalContent({ onOpenChange, setType }: LoginModalP
 						}
 					/>
 					<div className="flex justify-start px-1 py-2">
-						<Link onClick={() => setType("register")} className="cursor-pointer select-none text-primary">
+						<Link onPress={() => setType("register")} className="cursor-pointer select-none text-primary">
 							Don't have an account?
 						</Link>
 					</div>
 				</ModalBody>
 				<ModalFooter className="flex items-center justify-center">
-					<Button className="text-medium text-black" color="primary" isLoading={loginSpinner} onClick={async () => await logIn()}>
+					<Button className="text-medium text-black" color="primary" isLoading={loginSpinner} onPress={async () => await logIn()}>
 						Log In
 					</Button>
 				</ModalFooter>

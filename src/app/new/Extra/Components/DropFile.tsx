@@ -21,25 +21,25 @@ const DropFile = (props: DropFileProps) => {
 		<Dropzone
 			onDrop={setFiles}
 			onReject={(files) => console.log("rejected files", files)}
-			maxSize={5 * 1024 ** 2}
+			maxSize={10 * 1024 ** 2}
 			accept={IMAGE_MIME_TYPE}
 			openRef={openRef}
 			onClick={() => null}
 			className={`${props.className} flex items-center justify-center`}>
 			<div className={`${files.length > 0 && "hidden"} flex flex-col items-center justify-center gap-9`}>
 				<Dropzone.Accept>
-					<CiInboxOut className="h-[70px] w-[70px] text-primary" stroke={1.5} />
+					<CiInboxOut className="h-[70px] w-[70px] text-primary" stroke={"1.5"} />
 				</Dropzone.Accept>
 				<Dropzone.Reject>
-					<CiFileOff className="h-[70px] w-[70px] text-danger" stroke={1.5} />
+					<CiFileOff className="h-[70px] w-[70px] text-danger" stroke={"1.5"} />
 				</Dropzone.Reject>
 				<Dropzone.Idle>
-					<CiImageOn className="h-[70px] w-[70px] text-primary" stroke={1.5} />
+					<CiImageOn className="h-[70px] w-[70px] text-primary" stroke={"1.5"} />
 				</Dropzone.Idle>
 
 				<div className="flex flex-col items-center justify-center gap-5">
 					<p className="text-2xl">Drag photos here</p>
-					<Button color="primary" variant="bordered" onClick={() => openRef.current?.()}>
+					<Button color="primary" variant="bordered" onPress={() => openRef.current?.()}>
 						Select from computer
 					</Button>
 				</div>
@@ -47,12 +47,12 @@ const DropFile = (props: DropFileProps) => {
 			<div className={`${files.length === 0 && "hidden"} flex flex-col items-center justify-center gap-10`}>
 				<div className="flex h-[400px] w-max max-w-[80vw] flex-wrap gap-8 overflow-auto">{previews}</div>
 				<div className="flex gap-4">
-					<Button onClick={() => setFiles([])} className="text-lg" color="danger" variant="bordered">
+					<Button onPress={() => setFiles([])} className="text-lg" color="danger" variant="bordered">
 						Cancel
 					</Button>
 					<Button
 						isLoading={loading}
-						onClick={() => {
+						onPress={() => {
 							setLoading(true);
 							props.postPhotos(files);
 						}}

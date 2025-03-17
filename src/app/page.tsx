@@ -1,9 +1,9 @@
-import { unstable_noStore } from "next/cache";
+import { connection } from "next/server";
 import PostService from "~/server/services/PostService";
 import WeirdGrid from "./Extra/components/WeirdGrid";
 
 const Home = async () => {
-	unstable_noStore();
+	connection();
 	const getPostsRes = await PostService.getAllPosts();
 
 	return (

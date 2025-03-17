@@ -15,6 +15,7 @@ const LikedByModal = ({ userIDs, isOpen, onOpenChange }: Props) => {
 
 	useEffect(() => {
 		(async () => {
+			if (!isOpen) return;
 			const body: RequestBody = {
 				IDs: userIDs,
 			};
@@ -27,7 +28,7 @@ const LikedByModal = ({ userIDs, isOpen, onOpenChange }: Props) => {
 			setUsers(resUsers.users);
 			setLoading(false);
 		})();
-	}, [userIDs]);
+	}, [userIDs, isOpen]);
 
 	return (
 		<Modal isOpen={isOpen} onOpenChange={onOpenChange}>

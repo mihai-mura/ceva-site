@@ -9,7 +9,7 @@ async function compress(image: File) {
 	try {
 		const compressedFile = await imageCompression(image, options);
 
-		return compressedFile; // write your own logic
+		return compressedFile;
 	} catch (error) {
 		console.log(error);
 		return null;

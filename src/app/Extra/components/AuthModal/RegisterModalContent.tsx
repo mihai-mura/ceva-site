@@ -122,7 +122,7 @@ export default function RegisterModalContent({ onOpenChange, setType }: Register
 						}
 					/>
 					<div className="flex justify-start px-1 py-2">
-						<Link onClick={() => setType("login")} className="cursor-pointer select-none text-primary">
+						<Link onPress={() => setType("login")} className="cursor-pointer select-none text-primary">
 							Already have an account?
 						</Link>
 					</div>
@@ -133,7 +133,7 @@ export default function RegisterModalContent({ onOpenChange, setType }: Register
 						color="primary"
 						type="submit"
 						isLoading={isLoading}
-						onClick={() => registerUser()}>
+						onPress={() => registerUser()}>
 						Sign Up
 					</Button>
 				</ModalFooter>

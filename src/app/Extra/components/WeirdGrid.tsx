@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { PostWithAuthor } from "~/server/services/PostService";
 import ImageCard from "./ImageCard";
 
-interface Props {
+interface WeirdGridProps {
 	posts: PostWithAuthor[] | null;
 	isPrivate?: boolean;
 }
@@ -27,7 +27,7 @@ const Y_PADDING = (isPrivate?: boolean) => (isPrivate ? 0.4 : 0.28); // % of sec
 const MAX_ROTATION = (isPrivate?: boolean) => (isPrivate ? 15 : 15); //deg
 const MIN_ROTATION = (isPrivate?: boolean) => (isPrivate ? 2 : 2); //deg
 
-const WeirdGrid = ({ posts: postList, isPrivate }: Props) => {
+const WeirdGrid = ({ posts: postList, isPrivate }: WeirdGridProps) => {
 	const { data: session } = useSession();
 
 	const [posts, setPosts] = useState<PositionPost[] | null>([]);

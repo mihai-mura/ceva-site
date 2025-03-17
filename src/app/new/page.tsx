@@ -1,10 +1,7 @@
 "use client";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useSession } from "next-auth/react";
 import { redirect, useRouter } from "next/navigation";
-import { v4 } from "uuid";
-import compress from "~/lib/compress";
-import { storage } from "~/lib/firebase";
+import { compressAndUploadImage } from "~/lib/storage";
 import { RequestBody } from "../api/post/create/route";
 import DropFile from "./Extra/Components/DropFile";
 
@@ -21,14 +18,11 @@ const NewPostPage = () => {
 		if (session === null) return;
 		await Promise.all(
 			files.map(async (file) => {
-				const storageRef = ref(storage, `${session.user.id}/${v4()}`);
+				const url = await compressAndUploadImage(file, session.user.id);
 
-				const compressedFile = await compress(file);
-				if (!compressedFile) return;
+				if (!url) return;
 
-				await uploadBytes(storageRef, compressedFile);
-
-				const url = await getDownloadURL(storageRef);
+				//TODO: handle errors
 
 				const body: RequestBody = {
 					url,

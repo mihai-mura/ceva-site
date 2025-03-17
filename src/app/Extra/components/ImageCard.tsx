@@ -155,6 +155,7 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 							translateY: "-50%",
 							zIndex: opened ? 40 : 0,
 						}}
+						// @ts-ignore
 						animate={cardState}
 						transition={{ type: "spring" }}
 						whileHover={
@@ -184,7 +185,7 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 										{likesCount} {likesCount === 1 ? "like" : "likes"}
 									</p>
 									<Button
-										onClick={() => deletePost()}
+										onPress={() => deletePost()}
 										className=" bg-transparent text-[15px] text-danger"
 										radius="full"
 										variant="flat"
