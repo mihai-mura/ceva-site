@@ -3,14 +3,13 @@ import WeirdGrid from "~/app/Extra/components/WeirdGrid";
 import UserService, { UserServiceError } from "~/server/services/UserService";
 import Header from "./_components/Header";
 
-interface Props {
-	params: {
-		username: string;
-	};
+interface PageProps {
+	params: Promise<{ username: string }>;
 }
 
-const Profile = async ({ params }: Props) => {
-	const res = await UserService.getUserByUsername(params.username);
+const Profile = async ({ params }: PageProps) => {
+	const { username } = await params;
+	const res = await UserService.getUserByUsername(username);
 	if (res.error === UserServiceError.UserNotFound) {
 		redirect("/404");
 	}
