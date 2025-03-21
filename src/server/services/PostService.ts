@@ -145,5 +145,28 @@ class PostService {
 			return PostServiceError.ServerError;
 		}
 	}
+
+	static async updateDescription(postId: string, userId: string, newDescription: string): Promise<Post | PostServiceError> {
+		try {
+			let post = await db.post.findUnique({
+				where: {
+					id: postId,
+				},
+			});
+			if (!post) return PostServiceError.PostNotFound;
+			if (post.authorId !== userId) return PostServiceError.AccessDenied;
+			post = await db.post.update({
+				where: {
+					id: postId,
+				},
+				data: {
+					description: newDescription,
+				},
+			});
+			return post;
+		} catch (error) {
+			return PostServiceError.ServerError;
+		}
+	}
 }
 export default PostService;

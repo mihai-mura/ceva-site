@@ -7,10 +7,12 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
-import { FaTrash } from "react-icons/fa";
+import { FaCheck, FaTrash } from "react-icons/fa";
+import { MdModeEdit } from "react-icons/md";
 import polaroidTexture from "~/../public/polaroidTexture.jpeg";
 import type { RequestBody as PostDeleteRequestBody } from "~/app/api/post/delete/route";
-import type { RequestBody } from "~/app/api/post/like/route";
+import type { RequestBody as PostEditRequestBody } from "~/app/api/post/edit/route";
+import type { RequestBody as PostLikeRequestBody } from "~/app/api/post/like/route";
 import { storage } from "~/lib/firebase";
 import revalidate from "~/server/actions/revalidate";
 import LikedByModal from "./LikedByModalContent";
@@ -36,12 +38,15 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 
 	const [liked, setLiked] = useState(isLiked);
 	const [likesCount, setLikesCount] = useState(post.likedBy.length);
+	const [description, setDescription] = useState(post.description);
+	const [isEditing, setIsEditing] = useState(false);
 	const [deleteLoading, setDeleteLoading] = useState(false);
+	const [editLoading, setEditLoading] = useState(false);
 
-	const { isOpen, onOpen, onOpenChange } = useDisclosure();
+	const { isOpen: isLikesModalOpen, onOpen: onLikesModalOpen, onOpenChange: onLikesModalOpenChange } = useDisclosure();
 
 	const [isVisible, setIsVisible] = useState(true);
-	const [opened, setOpened] = useState(false);
+	const [isCardOpen, setIsCardOpened] = useState(false);
 	const [cardState, setCardState] = useState<PositionState>({
 		top: `${post.top}px`,
 		left: `${post.left}%`,
@@ -58,7 +63,7 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 	}, [post.likedBy.length]);
 
 	const handleClick = () => {
-		setOpened(true);
+		setIsCardOpened(true);
 		setCardState({
 			top: "50vh",
 			left: "50vw",
@@ -67,7 +72,7 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 		});
 	};
 	const cardRef = useClickOutside(() => {
-		setOpened(false);
+		setIsCardOpened(false);
 		setCardState({
 			top: `${post.top}px`,
 			left: `${post.left}%`,
@@ -80,7 +85,7 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 		setLiked(like);
 		setLikesCount((prev) => (like ? prev + 1 : prev - 1));
 
-		const body: RequestBody = {
+		const body: PostLikeRequestBody = {
 			postId: post.id,
 			action: like ? "like" : "unlike",
 		};
@@ -133,8 +138,32 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 		}
 	};
 
+	const updateDescription = async (description: string | null) => {
+		setEditLoading(true);
+
+		const body: PostEditRequestBody = {
+			postId: post.id,
+			description: description ?? "",
+		};
+
+		const res = await fetch("/api/post/edit", {
+			method: "PUT",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(body),
+		});
+
+		if (res.ok) {
+			setEditLoading(false);
+			setIsEditing(false);
+		} else {
+			//TODO: Show error message
+		}
+	};
+
 	const openLikesModal = () => {
-		onOpenChange();
+		onLikesModalOpenChange();
 	};
 
 	return (
@@ -146,20 +175,20 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 						ref={cardRef}
 						className="h-fit w-[250px]"
 						style={{
-							position: opened ? "fixed" : "absolute",
+							position: isCardOpen ? "fixed" : "absolute",
 							top: `${post.top}px`,
 							left: `${post.left}%`,
 							rotate: post.rotation,
-							cursor: opened ? "default" : "pointer",
+							cursor: isCardOpen ? "default" : "pointer",
 							translateX: "-50%",
 							translateY: "-50%",
-							zIndex: opened ? 40 : 0,
+							zIndex: isCardOpen ? 40 : 0,
 						}}
 						// @ts-ignore
 						animate={cardState}
 						transition={{ type: "spring" }}
 						whileHover={
-							!opened
+							!isCardOpen
 								? {
 										scale: 1.05,
 										transition: { duration: 0.1 },
@@ -179,30 +208,61 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 									onDragStart={(e) => e.preventDefault()}
 								/>
 							</CardBody>
+							{isCardOpen && (
+								<div className="px-5 text-sm">
+									{isEditing ? (
+										<input
+											type="text"
+											value={description ?? ""}
+											onChange={(e) => {
+												setDescription(e.target.value);
+											}}
+											autoFocus
+											className="w-full border-none bg-transparent text-gray-700 outline-none"
+										/>
+									) : (
+										<p className="text-black">{description}</p>
+									)}
+								</div>
+							)}
 							{isPrivate ? (
-								<CardFooter className="h-[38px] justify-between text-small">
-									<p className="cursor-pointer text-black" onClick={opened ? () => openLikesModal() : undefined}>
+								<CardFooter className="h-[38px] justify-between px-5 text-small">
+									<p className="cursor-pointer text-black" onClick={isCardOpen ? () => openLikesModal() : undefined}>
 										{likesCount} {likesCount === 1 ? "like" : "likes"}
 									</p>
-									<Button
-										onPress={() => deletePost()}
-										className=" bg-transparent text-[15px] text-danger"
-										radius="full"
-										variant="flat"
-										size="sm"
-										color="danger"
-										isLoading={deleteLoading}
-										isIconOnly>
-										<FaTrash />
-									</Button>
+									<div className="flex gap-3">
+										{isCardOpen && (
+											<Button
+												onPress={() => (isEditing ? updateDescription(description) : setIsEditing(true))}
+												className="w-fit min-w-fit bg-transparent text-[17px] text-black"
+												radius="full"
+												variant="flat"
+												size="sm"
+												isLoading={editLoading}
+												isIconOnly>
+												{isEditing ? <FaCheck /> : <MdModeEdit />}
+											</Button>
+										)}
+										<Button
+											onPress={() => deletePost()}
+											className="w-fit min-w-fit bg-transparent text-[17px] text-danger"
+											radius="full"
+											variant="flat"
+											size="sm"
+											color="danger"
+											isLoading={deleteLoading}
+											isIconOnly>
+											<FaTrash />
+										</Button>
+									</div>
 								</CardFooter>
 							) : (
-								<CardFooter className="h-[40px] justify-between gap-2 pb-5 pl-5 text-small">
-									<div className="flex items-center justify-center">
+								<CardFooter className="h-[40px] justify-between gap-2 px-5 pb-5 text-small">
+									<div className="flex items-center justify-center gap-1">
 										{session ? (
 											<button
-												onClick={opened ? () => handleLike(!liked) : undefined}
-												className={`flex h-[35px] w-[35px] cursor-pointer items-center justify-center text-[25px] transition-all ease-in-out active:text-[22px] ${
+												onClick={isCardOpen ? () => handleLike(!liked) : undefined}
+												className={`flex h-[35px] w-fit cursor-pointer items-center justify-center text-[25px] transition-all ease-in-out active:text-[22px] ${
 													liked ? "text-red-500" : "text-black"
 												}`}>
 												{liked ? <AiFillHeart /> : <AiOutlineHeart />}
@@ -224,7 +284,7 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 					</motion.div>
 				)}
 			</AnimatePresence>
-			<LikedByModal isOpen={isOpen} onOpenChange={onOpenChange} userIDs={post.likedBy} />
+			<LikedByModal isOpen={isLikesModalOpen} onOpenChange={onLikesModalOpenChange} userIDs={post.likedBy} />
 		</>
 	);
 };
