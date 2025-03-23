@@ -1,6 +1,6 @@
 import { connection } from "next/server";
 import PostService from "~/server/services/PostService";
-import WeirdGrid from "./Extra/components/WeirdGrid";
+import WeirdGrid from "./_extra/components/WeirdGrid";
 
 const Home = async () => {
 	connection();
