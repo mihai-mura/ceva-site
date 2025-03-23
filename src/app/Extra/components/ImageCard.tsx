@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { FaCheck, FaTrash } from "react-icons/fa";
+import { FiMessageCircle } from "react-icons/fi";
 import { MdModeEdit } from "react-icons/md";
 import polaroidTexture from "~/../public/polaroidTexture.jpeg";
 import type { RequestBody as PostDeleteRequestBody } from "~/app/api/post/delete/route";
@@ -15,6 +16,7 @@ import type { RequestBody as PostEditRequestBody } from "~/app/api/post/edit/rou
 import type { RequestBody as PostLikeRequestBody } from "~/app/api/post/like/route";
 import { storage } from "~/lib/firebase";
 import revalidate from "~/server/actions/revalidate";
+import CommentModal from "./CommentModal";
 import LikedByModal from "./LikedByModalContent";
 import { PositionPost } from "./WeirdGrid";
 
@@ -44,6 +46,7 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 	const [editLoading, setEditLoading] = useState(false);
 
 	const { isOpen: isLikesModalOpen, onOpen: onLikesModalOpen, onOpenChange: onLikesModalOpenChange } = useDisclosure();
+	const { isOpen: isCommentsModalOpen, onOpen: onCommentsModalOpen, onOpenChange: onCommentsModalOpenChange } = useDisclosure();
 
 	const [isVisible, setIsVisible] = useState(true);
 	const [isCardOpen, setIsCardOpened] = useState(false);
@@ -72,13 +75,15 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 		});
 	};
 	const cardRef = useClickOutside(() => {
-		setIsCardOpened(false);
-		setCardState({
-			top: `${post.top}px`,
-			left: `${post.left}%`,
-			scale: 1,
-			rotate: post.rotation,
-		});
+		if (!isLikesModalOpen && !isCommentsModalOpen) {
+			setIsCardOpened(false);
+			setCardState({
+				top: `${post.top}px`,
+				left: `${post.left}%`,
+				scale: 1,
+				rotate: post.rotation,
+			});
+		}
 	});
 
 	const handleLike = async (like: boolean) => {
@@ -166,6 +171,10 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 		onLikesModalOpenChange();
 	};
 
+	const openCommentsModal = () => {
+		onCommentsModalOpenChange();
+	};
+
 	return (
 		<>
 			<AnimatePresence>
@@ -184,6 +193,8 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 							translateY: "-50%",
 							zIndex: isCardOpen ? 40 : 0,
 						}}
+						//TODO: Fix this
+						//eslint-disable-next-line @typescript-eslint/ban-ts-comment
 						// @ts-ignore
 						animate={cardState}
 						transition={{ type: "spring" }}
@@ -226,10 +237,22 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 								</div>
 							)}
 							{isPrivate ? (
-								<CardFooter className="h-[38px] justify-between px-5 text-small">
-									<p className="cursor-pointer text-black" onClick={isCardOpen ? () => openLikesModal() : undefined}>
-										{likesCount} {likesCount === 1 ? "like" : "likes"}
-									</p>
+								<CardFooter className="h-[40px] justify-between px-5 text-small">
+									<div className="flex items-center gap-1">
+										<p
+											className="flex cursor-pointer items-center gap-1 text-black"
+											onClick={isCardOpen ? () => openLikesModal() : undefined}>
+											{likesCount}
+											<AiOutlineHeart />
+										</p>
+
+										<p
+											className="flex cursor-pointer items-center gap-1 text-black"
+											onClick={isCardOpen ? () => openCommentsModal() : undefined}>
+											{likesCount}
+											<FiMessageCircle />
+										</p>
+									</div>
 									<div className="flex gap-3">
 										{isCardOpen && (
 											<Button
@@ -262,18 +285,21 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 										{session ? (
 											<button
 												onClick={isCardOpen ? () => handleLike(!liked) : undefined}
-												className={`flex h-[35px] w-fit cursor-pointer items-center justify-center text-[25px] transition-all ease-in-out active:text-[22px] ${
+												className={`flex w-fit cursor-pointer items-center justify-center gap-1 text-[24px] transition-all ease-in-out active:text-[22px] ${
 													liked ? "text-red-500" : "text-black"
 												}`}>
+												<p className="text-[15px] text-black">{likesCount}</p>
 												{liked ? <AiFillHeart /> : <AiOutlineHeart />}
 											</button>
 										) : (
 											<></>
 										)}
 
-										<p className="text-black">
-											{likesCount} {likesCount === 1 ? "like" : "likes"}
-										</p>
+										<button
+											onClick={isCardOpen ? () => openCommentsModal() : undefined}
+											className={`flex w-fit min-w-fit cursor-pointer items-center justify-center gap-1 bg-transparent text-[20px] text-black transition-all ease-in-out active:text-[22px]`}>
+											<FiMessageCircle />
+										</button>
 									</div>
 									<Link className="text-black" href={`/profile/${post.author.username}`}>
 										@{post.author.username}
@@ -285,6 +311,12 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 				)}
 			</AnimatePresence>
 			<LikedByModal isOpen={isLikesModalOpen} onOpenChange={onLikesModalOpenChange} userIDs={post.likedBy} />
+			<CommentModal
+				isOpen={isCommentsModalOpen}
+				onOpenChange={onCommentsModalOpenChange}
+				postId={post.id}
+				isPrivate={isPrivate ?? false}
+			/>
 		</>
 	);
 };
