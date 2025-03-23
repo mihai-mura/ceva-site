@@ -3,7 +3,7 @@ import { useSession } from "next-auth/react";
 import { redirect, useRouter } from "next/navigation";
 import { compressAndUploadImage } from "~/lib/storage";
 import { RequestBody } from "../api/post/create/route";
-import DropFile from "./Extra/Components/DropFile";
+import DropFile from "./_extra/Components/DropFile";
 
 const NewPostPage = () => {
 	const { data: session } = useSession({
