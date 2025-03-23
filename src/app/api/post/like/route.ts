@@ -1,7 +1,7 @@
 import { Post } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getServerAuthSession } from "~/server/auth";
+import { getServerAuthSession } from "~/server/auth/config";
 import PostService, { PostServiceError } from "~/server/services/PostService";
 
 const reqBodySchema = z.object({

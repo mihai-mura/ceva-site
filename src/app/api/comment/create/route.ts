@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerAuthSession } from "~/server/auth";
+import { getServerAuthSession } from "~/server/auth/config";
 import CommentService, { CommentServiceError } from "~/server/services/CommentService";
 
 export interface RequestBody {

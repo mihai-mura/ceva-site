@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerAuthSession } from "~/server/auth";
+import { getServerAuthSession } from "~/server/auth/config";
 import UserService, { UserServiceError } from "~/server/services/UserService";
 
 export interface RequestBody {

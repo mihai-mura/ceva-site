@@ -1,5 +1,5 @@
 import { Post, User } from "@prisma/client";
-import { db } from "../../lib/db";
+import { db } from "../db";
 
 export enum PostServiceError {
 	ServerError,

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import WeirdGrid from "~/app/Extra/components/WeirdGrid";
+import WeirdGrid from "~/app/_extra/components/WeirdGrid";
 import UserService, { UserServiceError } from "~/server/services/UserService";
 import Header from "./_components/Header";
 

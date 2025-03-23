@@ -1,6 +1,6 @@
 import { Prisma, type User } from "@prisma/client";
 import bcrypt from "bcrypt";
-import { db } from "../../lib/db";
+import { db } from "../db";
 import type { PostWithAuthor } from "./PostService";
 
 export enum UserServiceError {

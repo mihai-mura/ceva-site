@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { getServerAuthSession } from "~/server/auth";
+import { getServerAuthSession } from "~/server/auth/config";
 import PostService from "~/server/services/PostService";
-import WeirdGrid from "../Extra/components/WeirdGrid";
+import WeirdGrid from "../_extra/components/WeirdGrid";
 
 const MyPosts = async () => {
 	const session = await getServerAuthSession();

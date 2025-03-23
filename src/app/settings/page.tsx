@@ -16,7 +16,7 @@ import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { uploadProfileImage } from "~/lib/storage";
-import EmilLoader from "../Extra/components/EmilLoader";
+import EmilLoader from "../_extra/components/EmilLoader";
 import { RequestBody } from "../api/user/update/route";
 
 const Settings = () => {
