@@ -2,7 +2,8 @@ import { Button, Input, Link, ModalBody, ModalContent, ModalFooter, ModalHeader 
 import React, { useState } from "react";
 import { FiEye, FiEyeOff, FiMail, FiUser } from "react-icons/fi";
 import { z } from "zod";
-import { RequestBody } from "~/app/api/register/route";
+import { tryCatch } from "~/lib/try-catch";
+import { api, isTRPCClientError } from "~/trpc/client";
 
 interface RegisterModalProps {
 	onOpenChange: () => void;
@@ -47,19 +48,25 @@ export default function RegisterModalContent({ onOpenChange, setType }: Register
 		if (!validateForm()) return;
 		setIsLoading(true);
 
-		const res = await fetch("/api/register", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ name, email, password } as RequestBody),
-		});
+		const { data: user, error } = await tryCatch(
+			api.user.register.mutate({
+				name,
+				email,
+				password,
+			}),
+		);
+
+		if (error) {
+			if (isTRPCClientError(error))
+				switch (error.data?.code) {
+					case "CONFLICT":
+						setEmailExists(true);
+						break;
+				}
+		}
 
 		setIsLoading(false);
-		if (res.ok) {
-			setType("login");
-		} else if (res.status === 409) {
-			setIsLoading(false);
-			setEmailExists(true);
-		}
+		if (user) setType("login");
 	};
 
 	return (
@@ -78,7 +85,7 @@ export default function RegisterModalContent({ onOpenChange, setType }: Register
 						value={name}
 						onValueChange={setName}
 						onChange={() => setIsNameInvalid(false)}
-						isInvalid={isNameInvalid}
+						isInvalid={isNameInvalid || emailExists}
 						errorMessage={
 							isNameInvalid ? "Username must be between 3 and 50 characters" : emailExists && "Username or email already in use"
 						}

@@ -1,7 +1,7 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { PostWithAuthor } from "~/server/services/PostService";
+import { type PostWithAuthor } from "~/server/services/PostService";
 import ImageCard from "./ImageCard";
 
 interface WeirdGridProps {

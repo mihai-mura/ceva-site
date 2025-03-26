@@ -1,7 +1,7 @@
 import { Avatar, Modal, ModalContent, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@nextui-org/react";
 import { User } from "@prisma/client";
 import { useEffect, useState } from "react";
-import { RequestBody } from "~/app/api/user/ids/route";
+import { api } from "~/trpc/client";
 
 interface Props {
 	userIDs: string[];
@@ -16,16 +16,11 @@ const LikedByModal = ({ userIDs, isOpen, onOpenChange }: Props) => {
 	useEffect(() => {
 		(async () => {
 			if (!isOpen) return;
-			const body: RequestBody = {
-				IDs: userIDs,
-			};
-			const users = await fetch("/api/user/ids", {
-				method: "POST",
-				body: JSON.stringify(body),
+			const users = await api.user.getByIDs.query({
+				userIDs: userIDs,
 			});
-			const resUsers: { users: Omit<User, "password">[] } = await users.json();
+			if (users) setUsers(users);
 
-			setUsers(resUsers.users);
 			setLoading(false);
 		})();
 	}, [userIDs, isOpen]);

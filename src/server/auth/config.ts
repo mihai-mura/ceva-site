@@ -35,8 +35,10 @@ export const authConfig: NextAuthOptions = {
 				password: { label: "Password", type: "password" },
 			},
 			async authorize(credentials, req): Promise<Omit<User, "password"> | null> {
-				if (credentials) return UserService.authorizeUser(credentials.email, credentials.password);
-				else return null;
+				if (credentials) {
+					const { data: user, error } = await UserService.authorizeUser(credentials.email, credentials.password);
+					return user;
+				} else return null;
 			},
 		}),
 	],
@@ -48,7 +50,7 @@ export const authConfig: NextAuthOptions = {
 			return token;
 		},
 		session: async ({ session, token }) => {
-			const user = await UserService.getUserById(token.userId ?? "");
+			const { data: user, error } = await UserService.getUserById(token.userId ?? "");
 
 			return {
 				...session,

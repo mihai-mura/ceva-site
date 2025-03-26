@@ -2,11 +2,23 @@ import { Post, User } from "@prisma/client";
 import { db } from "../db";
 
 export enum PostServiceError {
-	ServerError,
-	PostNotFound,
-	UserNotFound,
-	AccessDenied,
+	ServerError = "SERVER_ERROR",
+	PostNotFound = "POST_NOT_FOUND",
+	UserNotFound = "USER_NOT_FOUND",
+	AccessDenied = "ACCESS_DENIED",
 }
+
+type Success<T> = {
+	data: T;
+	error: null;
+};
+
+type Failure<E> = {
+	data: null;
+	error: E;
+};
+
+type Result<T, E = PostServiceError> = Success<T> | Failure<E>;
 
 export interface PostWithAuthor extends Post {
 	author: Pick<User, "username">;
@@ -17,7 +29,7 @@ class PostService {
 		// This is a static class
 	}
 
-	static async createPost(imageUrl: string, authorId: string) {
+	static async createPost(imageUrl: string, authorId: string): Promise<Result<Post>> {
 		try {
 			const post = await db.post.create({
 				data: {
@@ -25,16 +37,13 @@ class PostService {
 					authorId,
 				},
 			});
-			return post;
+			return { data: post, error: null };
 		} catch (error) {
-			return PostServiceError.ServerError;
+			return { data: null, error: PostServiceError.ServerError };
 		}
 	}
 
-	static async getUserPosts(
-		identifier: string,
-		type: "id" | "username",
-	): Promise<{ posts: PostWithAuthor[] | null; error: PostServiceError | null }> {
+	static async getUserPosts(identifier: string, type: "id" | "username"): Promise<Result<PostWithAuthor[]>> {
 		try {
 			const user = await db.user.findUnique({
 				where: type === "id" ? { id: identifier } : { username: identifier },
@@ -51,14 +60,14 @@ class PostService {
 					},
 				},
 			});
-			if (!user) return { posts: null, error: PostServiceError.UserNotFound };
-			return { posts: user.posts, error: null };
+			if (!user) return { data: null, error: PostServiceError.UserNotFound };
+			return { data: user.posts, error: null };
 		} catch (error) {
-			return { posts: null, error: PostServiceError.ServerError };
+			return { data: null, error: PostServiceError.ServerError };
 		}
 	}
 
-	static async getAllPosts(): Promise<{ posts: PostWithAuthor[] | null; error: PostServiceError | null }> {
+	static async getAllPosts(): Promise<Result<PostWithAuthor[]>> {
 		try {
 			const posts = await db.post.findMany({
 				orderBy: { createdAt: "desc" },
@@ -70,13 +79,13 @@ class PostService {
 					},
 				},
 			});
-			return { posts, error: null };
+			return { data: posts, error: null };
 		} catch (error) {
-			return { posts: null, error: PostServiceError.ServerError };
+			return { data: null, error: PostServiceError.ServerError };
 		}
 	}
 
-	static async likePost(postId: string, userId: string): Promise<PostServiceError | Post> {
+	static async likePost(postId: string, userId: string): Promise<Result<boolean>> {
 		try {
 			const post = await db.post.update({
 				where: {
@@ -88,15 +97,15 @@ class PostService {
 					},
 				},
 			});
-			if (!post) return PostServiceError.PostNotFound;
-			return post;
+			if (!post) return { data: null, error: PostServiceError.PostNotFound };
+			return { data: true, error: null };
 		} catch (error) {
 			console.log(error);
-			return PostServiceError.ServerError;
+			return { data: null, error: PostServiceError.ServerError };
 		}
 	}
 
-	static async unlikePost(postId: string, userId: string): Promise<PostServiceError | Post> {
+	static async unlikePost(postId: string, userId: string): Promise<Result<boolean>> {
 		try {
 			const post = await db.post.findUnique({
 				where: {
@@ -107,9 +116,9 @@ class PostService {
 				},
 			});
 
-			if (!post) return PostServiceError.PostNotFound;
+			if (!post) return { data: null, error: PostServiceError.PostNotFound };
 
-			const newLikedBy = await db.post.update({
+			await db.post.update({
 				where: {
 					id: postId,
 				},
@@ -120,41 +129,41 @@ class PostService {
 				},
 			});
 
-			return newLikedBy;
+			return { data: true, error: null };
 		} catch (error) {
-			return PostServiceError.ServerError;
+			return { data: null, error: PostServiceError.ServerError };
 		}
 	}
 
-	static async deletePost(postId: string, userId: string): Promise<Post | PostServiceError> {
+	static async deletePost(postId: string, userId: string): Promise<Result<boolean>> {
 		try {
 			const post = await db.post.findUnique({
 				where: {
 					id: postId,
 				},
 			});
-			if (!post) return PostServiceError.PostNotFound;
-			if (post.authorId !== userId) return PostServiceError.AccessDenied;
+			if (!post) return { data: null, error: PostServiceError.PostNotFound };
+			if (post.authorId !== userId) return { data: null, error: PostServiceError.AccessDenied };
 			await db.post.delete({
 				where: {
 					id: postId,
 				},
 			});
-			return post;
+			return { data: true, error: null };
 		} catch (error) {
-			return PostServiceError.ServerError;
+			return { data: null, error: PostServiceError.ServerError };
 		}
 	}
 
-	static async updateDescription(postId: string, userId: string, newDescription: string): Promise<Post | PostServiceError> {
+	static async updateDescription(postId: string, userId: string, newDescription: string): Promise<Result<Post>> {
 		try {
 			let post = await db.post.findUnique({
 				where: {
 					id: postId,
 				},
 			});
-			if (!post) return PostServiceError.PostNotFound;
-			if (post.authorId !== userId) return PostServiceError.AccessDenied;
+			if (!post) return { data: null, error: PostServiceError.PostNotFound };
+			if (post.authorId !== userId) return { data: null, error: PostServiceError.AccessDenied };
 			post = await db.post.update({
 				where: {
 					id: postId,
@@ -163,9 +172,9 @@ class PostService {
 					description: newDescription,
 				},
 			});
-			return post;
+			return { data: post, error: null };
 		} catch (error) {
-			return PostServiceError.ServerError;
+			return { data: null, error: PostServiceError.ServerError };
 		}
 	}
 }

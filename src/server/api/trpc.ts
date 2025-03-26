@@ -8,6 +8,7 @@
  */
 
 import { initTRPC, TRPCError } from "@trpc/server";
+import { TRPC_ERROR_CODE_KEY } from "@trpc/server/rpc";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
@@ -125,3 +126,9 @@ export const protectedProcedure = t.procedure.use(timingMiddleware).use(({ ctx, 
 		},
 	});
 });
+
+// Error map
+export type ErrorConfig = {
+	code: TRPC_ERROR_CODE_KEY;
+	message: string;
+};

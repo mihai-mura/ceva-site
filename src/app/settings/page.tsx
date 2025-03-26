@@ -16,8 +16,9 @@ import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { uploadProfileImage } from "~/lib/storage";
+import { tryCatch } from "~/lib/try-catch";
+import { api, isTRPCClientError } from "~/trpc/client";
 import EmilLoader from "../_extra/components/EmilLoader";
-import { RequestBody } from "../api/user/update/route";
 
 const Settings = () => {
 	const { data: session, status } = useSession({
@@ -30,6 +31,7 @@ const Settings = () => {
 	const { isOpen, onOpen, onOpenChange } = useDisclosure();
 	const [imageLoading, setImageLoading] = useState(false);
 	const [name, setName] = useState(session?.user.username ?? "");
+	const [nameInput, setNameInput] = useState(session?.user.username ?? "");
 	const [image, setImage] = useState(session?.user.image ?? "");
 	const [nameLoading, setNameLoading] = useState(false);
 	const [nameError, setNameError] = useState(false);
@@ -61,46 +63,36 @@ const Settings = () => {
 
 			const url = await uploadProfileImage(await fileHandle.getFile(), session?.user.id ?? "");
 
-			const body: RequestBody = {
+			await api.user.update.mutate({
 				imageUrl: url,
-			};
-			const res = await fetch("/api/user/update", {
-				method: "PUT",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify(body),
 			});
-
-			if (res.ok) {
-				setImageLoading(false);
-				setImage(url);
-			} else {
-				//TODO: Handle error
-			}
+			setImageLoading(false);
+			setImage(url);
 		}
 	};
 
 	const changeName = async (newName: string) => {
 		setNameLoading(true);
 
-		const body: RequestBody = {
-			name: newName,
-		};
-		const res = await fetch("/api/user/update", {
-			method: "PUT",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify(body),
-		});
-		if (res.ok) {
+		const { data, error } = await tryCatch(
+			api.user.update.mutate({
+				name: newName,
+			}),
+		);
+
+		if (error) {
+			if (isTRPCClientError(error)) {
+				switch (error.data?.code) {
+					case "CONFLICT":
+						setNameError(true);
+						setNameLoading(false);
+						break;
+				}
+			}
+		} else {
 			setNameLoading(false);
 			setName(newName);
 			onOpenChange();
-		} else {
-			if (res.status === 409) setNameError(true);
-			//TODO: Handle error
 		}
 	};
 
@@ -111,27 +103,15 @@ const Settings = () => {
 
 		setPassLoading(true);
 
-		const body: RequestBody = {
+		api.user.update.mutate({
 			password: pass,
-		};
-		const res = await fetch("/api/user/update", {
-			method: "PUT",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify(body),
 		});
-		if (res.ok) {
-			setPassLoading(false);
-			setPass1("");
-			setPass2("");
-		} else {
-			//TODO: Handle error
-		}
+		setPassLoading(false);
+		setPass1("");
+		setPass2("");
 	};
 
 	if (status === "loading") return <EmilLoader />;
-	//TODO: implement loading
 
 	return (
 		<div className="page flex flex-col gap-10 px-[28vw] pt-32">
@@ -204,8 +184,8 @@ const Settings = () => {
 									label="New Username"
 									placeholder="Enter username"
 									variant="bordered"
-									value={name}
-									onValueChange={setName}
+									value={nameInput}
+									onValueChange={setNameInput}
 									isInvalid={nameError}
 									errorMessage={nameError ? "Username already exists" : ""}
 								/>
@@ -214,7 +194,7 @@ const Settings = () => {
 								<Button color="danger" variant="flat" onPress={onClose}>
 									Close
 								</Button>
-								<Button color="success" isLoading={nameLoading} onPress={() => changeName(name)}>
+								<Button color="success" isLoading={nameLoading} onPress={() => changeName(nameInput)}>
 									Save
 								</Button>
 							</ModalFooter>

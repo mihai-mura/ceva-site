@@ -1,6 +1,7 @@
 import { postRouter } from "~/server/api/routers/post.router";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
-import { authRouter } from "./routers/auth.router";
+import { commentRouter } from "./routers/comment.router";
+import { userRouter } from "./routers/user.router";
 
 /**
  * This is the primary router for your server.
@@ -8,8 +9,9 @@ import { authRouter } from "./routers/auth.router";
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = createTRPCRouter({
+	user: userRouter,
 	post: postRouter,
-	auth: authRouter,
+	comment: commentRouter,
 });
 
 // export type definition of API
