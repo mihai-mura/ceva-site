@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
-import WeirdGrid from "~/app/Extra/components/WeirdGrid";
-import UserService, { UserServiceError } from "~/server/services/UserService";
+import WeirdGrid from "~/app/_extra/components/WeirdGrid";
+import { tryCatch } from "~/lib/try-catch";
+import { api, isTRPCError } from "~/trpc/server";
 import Header from "./_components/Header";
 
 interface PageProps {
@@ -9,15 +10,18 @@ interface PageProps {
 
 const Profile = async ({ params }: PageProps) => {
 	const { username } = await params;
-	const res = await UserService.getUserByUsername(username);
-	if (res.error === UserServiceError.UserNotFound) {
-		redirect("/404");
+	const { data: user, error } = await tryCatch(api.user.getByUsername({ username }));
+	if (error && isTRPCError(error)) {
+		switch (error.code) {
+			case "NOT_FOUND":
+				redirect("/404");
+		}
 	}
 
 	return (
 		<div className="page flex flex-col items-center justify-center gap-20 pt-16">
-			<Header username={res.user?.username ?? ""} profileImg={res.user?.image ?? ""} />
-			<WeirdGrid posts={res.user?.posts ?? null} />
+			<Header username={user?.username ?? ""} profileImg={user?.image ?? ""} />
+			<WeirdGrid posts={user?.posts ?? null} />
 		</div>
 	);
 };

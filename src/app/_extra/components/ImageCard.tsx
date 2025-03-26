@@ -11,11 +11,10 @@ import { FaCheck, FaTrash } from "react-icons/fa";
 import { FiMessageCircle } from "react-icons/fi";
 import { MdModeEdit } from "react-icons/md";
 import polaroidTexture from "~/../public/polaroidTexture.jpeg";
-import type { RequestBody as PostDeleteRequestBody } from "~/app/api/post/delete/route";
-import type { RequestBody as PostEditRequestBody } from "~/app/api/post/edit/route";
-import type { RequestBody as PostLikeRequestBody } from "~/app/api/post/like/route";
 import { storage } from "~/lib/firebase";
+import { tryCatch } from "~/lib/try-catch";
 import revalidate from "~/server/actions/revalidate";
+import { api } from "~/trpc/client";
 import CommentModal from "./CommentModal";
 import LikedByModal from "./LikedByModalContent";
 import { PositionPost } from "./WeirdGrid";
@@ -90,45 +89,32 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 		setLiked(like);
 		setLikesCount((prev) => (like ? prev + 1 : prev - 1));
 
-		const body: PostLikeRequestBody = {
-			postId: post.id,
-			action: like ? "like" : "unlike",
-		};
-		const res = await fetch("/api/post/like", {
-			method: "PUT",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify(body),
-		});
+		const { data, error } = await tryCatch(
+			api.post.like.mutate({
+				postId: post.id,
+				action: like ? "like" : "unlike",
+			}),
+		);
 
-		// If the server responds with an error, throw an error
-		if (!res.ok) {
+		if (error) {
 			setLiked(!like);
 			setLikesCount((prev) => (like ? prev - 1 : prev + 1));
-			//TODO: Show error message
 		}
+
+		//TODO: Show error message
 		revalidate("/my-posts");
 	};
 
 	const deletePost = async () => {
 		setDeleteLoading(true);
 
-		const body: PostDeleteRequestBody = {
+		const deleted = await api.post.delete.mutate({
 			postId: post.id,
-		};
-
-		const res = await fetch("/api/post/delete", {
-			method: "DELETE",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify(body),
 		});
-
 		setDeleteLoading(false);
 
-		if (res.ok) {
+		if (deleted) {
+			//TODO: move delete from firebase logic
 			//delete from firebase
 			const path = decodeURIComponent((post.imageUrl ?? "").split("o/")[1]?.split("?alt=media")[0] ?? "");
 			const storageRef = ref(storage, path);
@@ -138,33 +124,19 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 			setTimeout(() => {
 				onDelete(post.id);
 			}, 1000);
-		} else {
-			//TODO: Show error message
 		}
 	};
 
 	const updateDescription = async (description: string | null) => {
 		setEditLoading(true);
 
-		const body: PostEditRequestBody = {
+		await api.post.updateDescription.mutate({
 			postId: post.id,
 			description: description ?? "",
-		};
-
-		const res = await fetch("/api/post/edit", {
-			method: "PUT",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify(body),
 		});
 
-		if (res.ok) {
-			setEditLoading(false);
-			setIsEditing(false);
-		} else {
-			//TODO: Show error message
-		}
+		setEditLoading(false);
+		setIsEditing(false);
 	};
 
 	const openLikesModal = () => {
@@ -283,23 +255,24 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 								<CardFooter className="h-[40px] justify-between gap-2 px-5 pb-5 text-small">
 									<div className="flex items-center justify-center gap-1">
 										{session ? (
-											<button
-												onClick={isCardOpen ? () => handleLike(!liked) : undefined}
-												className={`flex w-fit cursor-pointer items-center justify-center gap-1 text-[24px] transition-all ease-in-out active:text-[22px] ${
-													liked ? "text-red-500" : "text-black"
-												}`}>
-												<p className="text-[15px] text-black">{likesCount}</p>
-												{liked ? <AiFillHeart /> : <AiOutlineHeart />}
-											</button>
+											<>
+												<button
+													onClick={isCardOpen ? () => handleLike(!liked) : undefined}
+													className={`flex w-fit cursor-pointer items-center justify-center gap-1 text-[24px] transition-all ease-in-out active:text-[22px] ${
+														liked ? "text-red-500" : "text-black"
+													}`}>
+													<p className="text-[15px] text-black">{likesCount}</p>
+													{liked ? <AiFillHeart /> : <AiOutlineHeart />}
+												</button>
+												<button
+													onClick={isCardOpen ? () => openCommentsModal() : undefined}
+													className={`flex w-fit min-w-fit cursor-pointer items-center justify-center gap-1 bg-transparent text-[20px] text-black transition-all ease-in-out active:text-[22px]`}>
+													<FiMessageCircle />
+												</button>
+											</>
 										) : (
 											<></>
 										)}
-
-										<button
-											onClick={isCardOpen ? () => openCommentsModal() : undefined}
-											className={`flex w-fit min-w-fit cursor-pointer items-center justify-center gap-1 bg-transparent text-[20px] text-black transition-all ease-in-out active:text-[22px]`}>
-											<FiMessageCircle />
-										</button>
 									</div>
 									<Link className="text-black" href={`/profile/${post.author.username}`}>
 										@{post.author.username}

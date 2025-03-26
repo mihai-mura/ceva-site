@@ -2,8 +2,8 @@
 import { useSession } from "next-auth/react";
 import { redirect, useRouter } from "next/navigation";
 import { compressAndUploadImage } from "~/lib/storage";
-import { RequestBody } from "../api/post/create/route";
-import DropFile from "./Extra/Components/DropFile";
+import { api } from "~/trpc/client";
+import DropFile from "./_extra/Components/DropFile";
 
 const NewPostPage = () => {
 	const { data: session } = useSession({
@@ -22,17 +22,9 @@ const NewPostPage = () => {
 
 				if (!url) return;
 
-				//TODO: handle errors
-
-				const body: RequestBody = {
-					url,
-				};
-				const res = await fetch("/api/post/create", {
-					method: "POST",
-					body: JSON.stringify(body),
+				await api.post.create.mutate({
+					url: url,
 				});
-				// return res;
-				//TODO: handle errors
 			}),
 		).then(() => router.push("/my-posts"));
 	};

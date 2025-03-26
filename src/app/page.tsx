@@ -1,14 +1,14 @@
 import { connection } from "next/server";
-import PostService from "~/server/services/PostService";
+import { api } from "~/trpc/server";
 import WeirdGrid from "./_extra/components/WeirdGrid";
 
 const Home = async () => {
 	connection();
-	const getPostsRes = await PostService.getAllPosts();
+	const posts = await api.post.getAll();
 
 	return (
 		<div className="page flex items-center justify-center pt-16">
-			<WeirdGrid posts={getPostsRes.posts} />
+			<WeirdGrid posts={posts} />
 		</div>
 	);
 };

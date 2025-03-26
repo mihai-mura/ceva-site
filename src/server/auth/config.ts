@@ -1,7 +1,7 @@
 import type { User } from "@prisma/client";
-import { getServerSession, type DefaultSession, type NextAuthOptions } from "next-auth";
+import { type DefaultSession, type NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import UserService from "./services/UserService";
+import UserService from "../services/UserService";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -26,7 +26,7 @@ declare module "next-auth/jwt" {
  *
  * @see https://next-auth.js.org/configuration/options
  */
-export const authOptions: NextAuthOptions = {
+export const authConfig: NextAuthOptions = {
 	providers: [
 		CredentialsProvider({
 			name: "Email",
@@ -35,8 +35,10 @@ export const authOptions: NextAuthOptions = {
 				password: { label: "Password", type: "password" },
 			},
 			async authorize(credentials, req): Promise<Omit<User, "password"> | null> {
-				if (credentials) return UserService.authorizeUser(credentials.email, credentials.password);
-				else return null;
+				if (credentials) {
+					const { data: user, error } = await UserService.authorizeUser(credentials.email, credentials.password);
+					return user;
+				} else return null;
 			},
 		}),
 	],
@@ -48,7 +50,7 @@ export const authOptions: NextAuthOptions = {
 			return token;
 		},
 		session: async ({ session, token }) => {
-			const user = await UserService.getUserById(token.userId ?? "");
+			const { data: user, error } = await UserService.getUserById(token.userId ?? "");
 
 			return {
 				...session,
@@ -59,10 +61,3 @@ export const authOptions: NextAuthOptions = {
 		},
 	},
 };
-
-/**
- * Wrapper for `getServerSession` so that you don't need to import the `authOptions` in every file.
- *
- * @see https://next-auth.js.org/configuration/nextjs
- */
-export const getServerAuthSession = () => getServerSession(authOptions);

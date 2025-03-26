@@ -4,6 +4,7 @@ import { Avatar, Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeade
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { CommentWithAuthor } from "~/server/services/CommentService";
+import { api } from "~/trpc/client";
 
 interface CommentModalProps {
 	isOpen: boolean;
@@ -27,15 +28,9 @@ export default function CommentModal({ isOpen, onOpenChange, postId, isPrivate }
 
 	const fetchComments = async () => {
 		setIsLoadingComments(true);
-		try {
-			const res = await fetch(`/api/comment/list?postId=${postId}`);
-			if (res.ok) {
-				const data: CommentWithAuthor[] = await res.json();
-				setComments(data);
-			}
-		} catch (error) {
-			console.error("Error fetching comments:", error);
-		}
+
+		const comments = await api.comment.list.query({ postId });
+		if (comments) setComments(comments);
 		setIsLoadingComments(false);
 	};
 
@@ -43,14 +38,13 @@ export default function CommentModal({ isOpen, onOpenChange, postId, isPrivate }
 		if (!newComment.trim()) return;
 		setIsLoading(true);
 
-		const res = await fetch("/api/comment/create", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ postId, content: newComment.trim() }),
+		const comment = await api.comment.create.mutate({
+			postId,
+			content: newComment.trim(),
 		});
 
 		setIsLoading(false);
-		if (res.ok) {
+		if (comment) {
 			setNewComment("");
 			await fetchComments();
 		}
