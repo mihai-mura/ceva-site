@@ -1,6 +1,7 @@
 "use client";
 import { useClickOutside } from "@mantine/hooks";
 import { Button, Card, CardBody, CardFooter, Image, Link, useDisclosure } from "@nextui-org/react";
+import polaroidTexture from "@public/polaroidTexture.jpeg";
 import { deleteObject, ref } from "firebase/storage";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSession } from "next-auth/react";
@@ -10,7 +11,6 @@ import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { FaCheck, FaTrash } from "react-icons/fa";
 import { FiMessageCircle } from "react-icons/fi";
 import { MdModeEdit } from "react-icons/md";
-import polaroidTexture from "~/../public/polaroidTexture.jpeg";
 import { storage } from "~/lib/firebase";
 import { tryCatch } from "~/lib/try-catch";
 import revalidate from "~/server/actions/revalidate";
