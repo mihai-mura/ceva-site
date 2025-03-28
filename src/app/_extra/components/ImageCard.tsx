@@ -17,7 +17,7 @@ import revalidate from "~/server/actions/revalidate";
 import { api } from "~/trpc/client";
 import CommentModal from "./CommentModal";
 import LikedByModal from "./LikedByModalContent";
-import { PositionPost } from "./WeirdGrid";
+import { type PositionPost } from "./WeirdGrid";
 
 interface Props {
 	post: PositionPost;

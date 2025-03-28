@@ -1,4 +1,4 @@
-import { Comment, User } from "@prisma/client";
+import { type Comment, type User } from "@prisma/client";
 import { db } from "../db";
 
 export enum CommentServiceError {

@@ -1,5 +1,5 @@
 import { Avatar, Modal, ModalContent, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@nextui-org/react";
-import { User } from "@prisma/client";
+import { type User } from "@prisma/client";
 import { useEffect, useState } from "react";
 import { api } from "~/trpc/client";
 

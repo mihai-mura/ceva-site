@@ -3,7 +3,7 @@
 import { Avatar, Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Spinner, Textarea } from "@nextui-org/react";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { CommentWithAuthor } from "~/server/services/CommentService";
+import { type CommentWithAuthor } from "~/server/services/CommentService";
 import { api } from "~/trpc/client";
 
 interface CommentModalProps {

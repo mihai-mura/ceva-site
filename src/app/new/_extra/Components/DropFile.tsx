@@ -1,4 +1,4 @@
-import { Dropzone, DropzoneProps, FileWithPath, IMAGE_MIME_TYPE } from "@mantine/dropzone";
+import { Dropzone, type DropzoneProps, type FileWithPath, IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { Button, Image } from "@nextui-org/react";
 import { useRef, useState } from "react";
 import { CiFileOff, CiImageOn, CiInboxOut } from "react-icons/ci";

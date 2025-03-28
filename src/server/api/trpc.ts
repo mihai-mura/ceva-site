@@ -8,7 +8,7 @@
  */
 
 import { initTRPC, TRPCError } from "@trpc/server";
-import { TRPC_ERROR_CODE_KEY } from "@trpc/server/rpc";
+import { type TRPC_ERROR_CODE_KEY } from "@trpc/server/rpc";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
