@@ -9,16 +9,6 @@ await import("./src/env.js");
 /** @type {import("next").NextConfig} */
 const config = {
 	reactStrictMode: true,
-	webpack: (config) => {
-		config.resolve.alias["@public"] = new URL("./public", import.meta.url).pathname;
-		return config;
-	},
-	eslint: {
-		ignoreDuringBuilds: true,
-	},
-	typescript: {
-		ignoreBuildErrors: true,
-	},
 };
 
 export default config;
