@@ -13,17 +13,18 @@ interface Props {
 const AIHint = ({ onAutoComplete, isLoading, isError }: Props) => {
 	return (
 		<motion.div
-			initial={{ height: "20px" }}
+			initial={!isError && !isLoading ? { height: "20px" } : { height: "60px", bottom: "-40px" }}
 			whileHover={{ height: "60px", bottom: "-40px" }}
 			className="absolute -bottom-5 flex w-full flex-col items-center justify-end overflow-hidden">
 			<div className="mb-2 h-5" />
 			<Button
-				className="mb-2 bg-primary text-black hover:bg-primary/5"
+				className={`mb-2 ${!isError ? "bg-white" : "bg-danger"} text-black`}
 				size="sm"
-				color={!isError ? "primary" : "danger"}
 				variant="ghost"
+				color={!isError ? "secondary" : "danger"}
 				startContent={!isLoading ? !isError ? <FaMagic /> : <MdErrorOutline /> : null}
 				onPress={onAutoComplete}
+				isDisabled={isError}
 				isLoading={isLoading}>
 				{!isError ? "AI Description" : "Something went wrong"}
 			</Button>
