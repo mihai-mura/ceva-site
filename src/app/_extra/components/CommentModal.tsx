@@ -2,9 +2,8 @@
 
 import { Avatar, Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Spinner, Textarea } from "@nextui-org/react";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
-import { type CommentWithAuthor } from "~/server/services/CommentService";
-import { api } from "~/trpc/client";
+import { useState } from "react";
+import { api } from "~/trpc/react";
 
 interface CommentModalProps {
 	isOpen: boolean;
@@ -16,38 +15,31 @@ interface CommentModalProps {
 export default function CommentModal({ isOpen, onOpenChange, postId, isPrivate }: CommentModalProps) {
 	const { data: session } = useSession();
 	const [newComment, setNewComment] = useState("");
-	const [isLoading, setIsLoading] = useState(false);
-	const [comments, setComments] = useState<CommentWithAuthor[]>([]);
-	const [isLoadingComments, setIsLoadingComments] = useState(false);
 
-	useEffect(() => {
-		if (isOpen) {
-			fetchComments();
-		}
-	}, [isOpen]);
+	const apiUtils = api.useUtils();
 
-	const fetchComments = async () => {
-		setIsLoadingComments(true);
+	//queries and mutations
+	const { data: comments, isLoading: isLoadingComments } = api.comment.list.useQuery(
+		{ postId },
+		{
+			enabled: isOpen,
+		},
+	);
 
-		const comments = await api.comment.list.query({ postId });
-		if (comments) setComments(comments);
-		setIsLoadingComments(false);
-	};
+	const { mutate: createComment, isPending: isCreateCommentPending } = api.comment.create.useMutation({
+		onSuccess: async () => {
+			await apiUtils.comment.list.invalidate();
+			setNewComment("");
+		},
+	});
 
 	const handleSubmit = async () => {
 		if (!newComment.trim()) return;
-		setIsLoading(true);
 
-		const comment = await api.comment.create.mutate({
+		createComment({
 			postId,
 			content: newComment.trim(),
 		});
-
-		setIsLoading(false);
-		if (comment) {
-			setNewComment("");
-			await fetchComments();
-		}
 	};
 
 	return (
@@ -61,10 +53,10 @@ export default function CommentModal({ isOpen, onOpenChange, postId, isPrivate }
 						</div>
 					) : (
 						<div className="flex flex-col gap-6 overflow-y-auto scrollbar-hide">
-							{comments.length === 0 ? (
+							{comments?.length === 0 ? (
 								<p className="text-center text-gray-500 dark:text-gray-400">No comments yet. Be the first to comment!</p>
 							) : (
-								comments.map((comment) => (
+								comments?.map((comment) => (
 									<div key={comment.id} className="flex flex-col gap-2 rounded-md p-3">
 										<div className="flex items-center gap-2">
 											<Avatar size="sm" src={comment.author.image ?? ""} name={comment.author.username ?? ""} showFallback />
@@ -96,7 +88,7 @@ export default function CommentModal({ isOpen, onOpenChange, postId, isPrivate }
 						<Button
 							color="primary"
 							onPress={handleSubmit}
-							isLoading={isLoading}
+							isLoading={isCreateCommentPending}
 							className="font-semibold text-black transition-transform hover:scale-[1.02]">
 							Post Comment
 						</Button>

@@ -45,6 +45,7 @@
 	},
 	"devDependencies": {
 		"@next/eslint-plugin-next": "^14.2.25",
+		"@tanstack/react-query-devtools": "^5.72.2",
 		"@types/bcrypt": "^5.0.2",
 		"@types/eslint": "^8.56.12",
 		"@types/multer": "^1.4.12",

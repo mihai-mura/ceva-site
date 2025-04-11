@@ -1,7 +1,16 @@
-import { Avatar, Modal, ModalContent, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@nextui-org/react";
-import { type User } from "@prisma/client";
-import { useEffect, useState } from "react";
-import { api } from "~/trpc/client";
+import {
+	Avatar,
+	Modal,
+	ModalContent,
+	Spinner,
+	Table,
+	TableBody,
+	TableCell,
+	TableColumn,
+	TableHeader,
+	TableRow,
+} from "@nextui-org/react";
+import { api } from "~/trpc/react";
 
 interface Props {
 	userIDs: string[];
@@ -10,20 +19,13 @@ interface Props {
 }
 
 const LikedByModal = ({ userIDs, isOpen, onOpenChange }: Props) => {
-	const [loading, setLoading] = useState(true);
-	const [users, setUsers] = useState<Omit<User, "password">[]>([]);
-
-	useEffect(() => {
-		(async () => {
-			if (!isOpen) return;
-			const users = await api.user.getByIDs.query({
-				userIDs: userIDs,
-			});
-			if (users) setUsers(users);
-
-			setLoading(false);
-		})();
-	}, [userIDs, isOpen]);
+	// queries and mutations
+	const { data: users, isLoading } = api.user.getByIDs.useQuery(
+		{ userIDs },
+		{
+			enabled: isOpen && userIDs.length > 0,
+		},
+	);
 
 	return (
 		<Modal isOpen={isOpen} onOpenChange={onOpenChange}>
@@ -34,16 +36,30 @@ const LikedByModal = ({ userIDs, isOpen, onOpenChange }: Props) => {
 							<TableHeader>
 								<TableColumn className="text-lg">Likes</TableColumn>
 							</TableHeader>
-							<TableBody emptyContent={users.length === 0 ? "No likes" : undefined}>
-								{users.map((user) => (
+							{isLoading ? (
+								<TableBody>
 									<TableRow>
-										<TableCell className="flex items-center gap-4">
-											<Avatar size="lg" src={user.image ?? ""} name={user.username ?? ""} showFallback />
-											<p className="text-lg">@{user.username}</p>
+										<TableCell className="flex items-center justify-center gap-4">
+											<Spinner />
 										</TableCell>
 									</TableRow>
-								))}
-							</TableBody>
+								</TableBody>
+							) : (
+								<TableBody emptyContent={!users || users.length === 0 ? "No likes" : undefined}>
+									{users ? (
+										users.map((user) => (
+											<TableRow>
+												<TableCell className="flex items-center gap-4">
+													<Avatar size="lg" src={user.image ?? ""} name={user.username ?? ""} showFallback />
+													<p className="text-lg">@{user.username}</p>
+												</TableCell>
+											</TableRow>
+										))
+									) : (
+										<></>
+									)}
+								</TableBody>
+							)}
 						</Table>
 					</>
 				)}

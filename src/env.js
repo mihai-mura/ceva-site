@@ -30,6 +30,7 @@ export const env = createEnv({
 	client: {
 		// NEXT_PUBLIC_CLIENTVAR: z.string(),
 		NEXT_PUBLIC_IMAGE_CAPTIONING_URL: z.string().url().optional(),
+		NEXT_PUBLIC_NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 	},
 
 	/**
@@ -41,6 +42,7 @@ export const env = createEnv({
 		NODE_ENV: process.env.NODE_ENV,
 		NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
 		NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+		NEXT_PUBLIC_NODE_ENV: process.env.NODE_ENV,
 		NEXT_PUBLIC_IMAGE_CAPTIONING_URL: process.env.NEXT_PUBLIC_IMAGE_CAPTIONING_URL,
 	},
 	/**
