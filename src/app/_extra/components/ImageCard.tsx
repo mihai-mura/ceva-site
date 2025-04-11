@@ -5,16 +5,17 @@ import polaroidTexture from "@public/polaroidTexture.jpeg";
 import { deleteObject, ref } from "firebase/storage";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { FaCheck, FaTrash } from "react-icons/fa";
 import { FiMessageCircle } from "react-icons/fi";
 import { MdModeEdit } from "react-icons/md";
 import { storage } from "~/lib/firebase";
+import { generateImageCaption } from "~/lib/imageCaptioning";
 import { tryCatch } from "~/lib/try-catch";
 import revalidate from "~/server/actions/revalidate";
 import { api } from "~/trpc/client";
+import AIHint from "./AIHint";
 import CommentModal from "./CommentModal";
 import LikedByModal from "./LikedByModalContent";
 import { type PositionPost } from "./WeirdGrid";
@@ -35,7 +36,6 @@ interface PositionState {
 
 const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 	const { data: session } = useSession();
-	const router = useRouter();
 
 	const [liked, setLiked] = useState(isLiked);
 	const [likesCount, setLikesCount] = useState(post.likedBy.length);
@@ -43,6 +43,8 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 	const [isEditing, setIsEditing] = useState(false);
 	const [deleteLoading, setDeleteLoading] = useState(false);
 	const [editLoading, setEditLoading] = useState(false);
+	const [autocompleteLoading, setAutocompleteLoading] = useState(false);
+	const [autocompleteError, setAutocompleteError] = useState(false);
 
 	const { isOpen: isLikesModalOpen, onOpen: onLikesModalOpen, onOpenChange: onLikesModalOpenChange } = useDisclosure();
 	const { isOpen: isCommentsModalOpen, onOpen: onCommentsModalOpen, onOpenChange: onCommentsModalOpenChange } = useDisclosure();
@@ -63,6 +65,12 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 	useEffect(() => {
 		setLikesCount(post.likedBy.length);
 	}, [post.likedBy.length]);
+
+	useEffect(() => {
+		if (!isCardOpen) {
+			setAutocompleteError(false);
+		}
+	}, [isCardOpen]);
 
 	const handleClick = () => {
 		setIsCardOpened(true);
@@ -135,6 +143,24 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 			description: description ?? "",
 		});
 
+		setEditLoading(false);
+		setIsEditing(false);
+	};
+
+	const autocompleteDescription = async () => {
+		setAutocompleteLoading(true);
+		const { data: caption, error: generationError } = await generateImageCaption(post.imageUrl);
+		if (generationError) setAutocompleteError(true);
+		else if (caption) {
+			const { data, error } = await tryCatch(
+				api.post.updateDescription.mutate({
+					postId: post.id,
+					description: caption,
+				}),
+			);
+			setDescription(caption);
+		}
+		setAutocompleteLoading(false);
 		setEditLoading(false);
 		setIsEditing(false);
 	};
@@ -221,7 +247,6 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 										<p
 											className="flex cursor-pointer items-center gap-1 text-black"
 											onClick={isCardOpen ? () => openCommentsModal() : undefined}>
-											{likesCount}
 											<FiMessageCircle />
 										</p>
 									</div>
@@ -280,6 +305,9 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 								</CardFooter>
 							)}
 						</Card>
+						{isCardOpen && isPrivate && (
+							<AIHint onAutoComplete={autocompleteDescription} isLoading={autocompleteLoading} isError={autocompleteError} />
+						)}
 					</motion.div>
 				)}
 			</AnimatePresence>
