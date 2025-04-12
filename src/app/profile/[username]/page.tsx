@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import WeirdGrid from "~/app/_extra/components/WeirdGrid";
 import { tryCatch } from "~/lib/try-catch";
 import { api, isTRPCError } from "~/trpc/server";
-import Header from "./_components/Header";
+import Header from "../../_extra/components/Header";
 
 interface PageProps {
 	params: Promise<{ username: string }>;

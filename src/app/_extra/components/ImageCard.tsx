@@ -299,7 +299,9 @@ const ImageCard = ({ post, isPrivate, isLiked, onDelete }: Props) => {
 											<></>
 										)}
 									</div>
-									<Link className="text-black" href={`/profile/${post.author.username}`}>
+									<Link
+										className="text-black"
+										href={session?.user.id === post.authorId ? `/my-posts` : `/profile/${post.author.username}`}>
 										@{post.author.username}
 									</Link>
 								</CardFooter>
