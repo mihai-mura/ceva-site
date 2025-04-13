@@ -1,14 +1,16 @@
-import { env } from "~/env";
+import { getAIURL } from "./localStorage";
 
 type ImageCaptioningResponse = {
 	caption: string;
 };
 
 export const generateImageCaption = async (imageUrl: string) => {
-	if (!env.NEXT_PUBLIC_IMAGE_CAPTIONING_URL) return { data: null, error: "No image captioning url" };
+	const URL = getAIURL();
+
+	if (!URL) return { data: null, error: "No image captioning url" };
 
 	try {
-		const response = await fetch(env.NEXT_PUBLIC_IMAGE_CAPTIONING_URL, {
+		const response = await fetch(`${URL}/generate-caption`, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -19,5 +21,15 @@ export const generateImageCaption = async (imageUrl: string) => {
 		return { data: data.caption, error: null };
 	} catch (error) {
 		return { data: null, error };
+	}
+};
+
+export const testImageCaptioningAPI = async (URL: string): Promise<boolean> => {
+	try {
+		const response = await fetch(`${URL}/test`);
+		if (response.status !== 200) return false;
+		return true;
+	} catch (error) {
+		return false;
 	}
 };

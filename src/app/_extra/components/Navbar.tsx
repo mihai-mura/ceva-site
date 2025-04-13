@@ -11,42 +11,26 @@ import {
 	NavbarBrand,
 	NavbarContent,
 	NavbarItem,
-	NavbarMenu,
-	NavbarMenuItem,
-	NavbarMenuToggle,
 	Navbar as NavbarNextUI,
 	useDisclosure,
 } from "@nextui-org/react";
 import { signOut, useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import AISettingsModal from "./AISettingsModal";
 import AuthModal from "./AuthModal/AuthModal";
 
 const Navbar = () => {
-	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const AuthModalState = useDisclosure();
+	const AISettingsModalState = useDisclosure();
 	const [authModalType, setAuthModalType] = useState<"login" | "register">("login");
 
 	const { data: session, status } = useSession();
 	const pathname = usePathname();
 
-	const menuItems = [
-		"Profile",
-		"Dashboard",
-		"Activity",
-		"Analytics",
-		"System",
-		"Deployments",
-		"My Settings",
-		"Team Settings",
-		"Help & Feedback",
-		"Log Out",
-	];
-
 	return (
-		<NavbarNextUI className="sticky" onMenuOpenChange={setIsMenuOpen}>
+		<NavbarNextUI className="sticky">
 			<NavbarContent>
-				<NavbarMenuToggle aria-label={isMenuOpen ? "Close menu" : "Open menu"} className="sm:hidden" />
 				<NavbarBrand>
 					<p className="font-bold text-inherit">CEVA-SITE</p>
 				</NavbarBrand>
@@ -106,6 +90,9 @@ const Navbar = () => {
 								<DropdownItem key="settings" href="/settings">
 									My Settings
 								</DropdownItem>
+								<DropdownItem key="ai" onPress={() => AISettingsModalState.onOpen()}>
+									AI Autocomplete
+								</DropdownItem>
 								<DropdownItem key="logout" color="danger" className="text-danger" onPress={async () => await signOut()}>
 									Log Out
 								</DropdownItem>
@@ -142,25 +129,13 @@ const Navbar = () => {
 				</NavbarContent>
 			)}
 
-			<NavbarMenu>
-				{menuItems.map((item, index) => (
-					<NavbarMenuItem key={`${item}-${index}`}>
-						<Link
-							color={index === 2 ? "primary" : index === menuItems.length - 1 ? "danger" : "foreground"}
-							className="w-full"
-							href="#"
-							size="lg">
-							{item}
-						</Link>
-					</NavbarMenuItem>
-				))}
-			</NavbarMenu>
 			<AuthModal
 				isOpen={AuthModalState.isOpen}
 				onOpenChange={AuthModalState.onClose}
 				type={authModalType}
 				setType={setAuthModalType}
 			/>
+			<AISettingsModal isOpen={AISettingsModalState.isOpen} onOpenChange={AISettingsModalState.onClose} />
 		</NavbarNextUI>
 	);
 };
