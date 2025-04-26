@@ -54,7 +54,7 @@ export default function CommentModal({ isOpen, onOpenChange, postId, isPrivate }
 					) : (
 						<div className="flex flex-col gap-6 overflow-y-auto scrollbar-hide">
 							{comments?.length === 0 ? (
-								<p className="text-center text-gray-500 dark:text-gray-400">No comments yet. Be the first to comment!</p>
+								<p className="p-5 text-center text-gray-500 dark:text-gray-400">No comments yet. Be the first to comment!</p>
 							) : (
 								comments?.map((comment) => (
 									<div key={comment.id} className="flex flex-col gap-2 rounded-md p-3">

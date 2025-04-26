@@ -32,7 +32,7 @@ const Navbar = () => {
 		<NavbarNextUI className="sticky">
 			<NavbarContent>
 				<NavbarBrand>
-					<p className="font-bold text-inherit">CEVA-SITE</p>
+					<p className="font-bold text-inherit">PIXELOG</p>
 				</NavbarBrand>
 			</NavbarContent>
 

@@ -50,6 +50,7 @@ export const authConfig: NextAuthOptions = {
 			return token;
 		},
 		session: async ({ session, token }) => {
+			//TODO: remove password
 			const { data: user, error } = await UserService.getUserById(token.userId ?? "");
 
 			return {
